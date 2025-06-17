@@ -11,31 +11,32 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): View
-    {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
-    }
 
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
+    public function show()
+{
+    $profile = Auth::user()->profile;
+    return view('profile.show', compact('profile'));
+}
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
+public function edit()
+{
+    $profile = Auth::user()->profile;
+    return view('profile.edit', compact('profile'));
+}
 
-        $request->user()->save();
+public function update(Request $request)
+{
+    $data = $request->validate([
+        'bio' => 'nullable|string',
+        'phone' => 'nullable|string',
+        'address' => 'nullable|string',
+    ]);
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
-    }
+    $profile = Auth::user()->profile;
+    $profile->update($data);
+
+    return redirect()->route('profile.show')->with('success', 'Profile updated.');
+}
 
     /**
      * Delete the user's account.
